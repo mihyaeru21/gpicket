@@ -23,6 +23,7 @@ type SlackWrapper struct {
 	team     string
 	teamID   string
 	channels map[string]string
+	users    map[string]string
 }
 
 func NewSlack(token string) *SlackWrapper {
@@ -30,6 +31,7 @@ func NewSlack(token string) *SlackWrapper {
 		token:    token,
 		api:      slack.New(token),
 		channels: map[string]string{},
+		users:    map[string]string{},
 	}
 }
 
@@ -38,7 +40,11 @@ func (self *SlackWrapper) Start(messages chan Message) {
 		fmt.Printf("Authentication failed. token: %s\n", self.token)
 		os.Exit(1)
 	}
-	if err := self.combineChannel(); err != nil {
+	if err := self.combineUsers(); err != nil {
+		fmt.Printf("Authentication failed. token: %s\n", self.token)
+		os.Exit(1)
+	}
+	if err := self.combineChannels(); err != nil {
 		fmt.Printf("Authentication failed. token: %s\n", self.token)
 		os.Exit(1)
 	}
@@ -64,6 +70,10 @@ func (self *SlackWrapper) createMessage(event *slack.MessageEvent) Message {
 	if !ok {
 		channelName = event.Channel
 	}
+	userName, ok := self.users[event.User]
+	if !ok {
+		userName = event.User
+	}
 
 	return Message{
 		Timestamp: event.Timestamp,
@@ -71,6 +81,7 @@ func (self *SlackWrapper) createMessage(event *slack.MessageEvent) Message {
 		TeamID:    self.teamID,
 		Channel:   channelName,
 		ChannelID: event.Channel,
+		User:      userName,
 		UserID:    event.User,
 		Text:      event.Text,
 	}
@@ -86,7 +97,20 @@ func (self *SlackWrapper) combineTeam() error {
 	return nil
 }
 
-func (self *SlackWrapper) combineChannel() error {
+func (self *SlackWrapper) combineUsers() error {
+	users, err := self.api.GetUsers()
+	if err != nil {
+		return err
+	}
+	for i := 0; i < len(users); i++ {
+		user := users[i]
+		self.users[user.ID] = user.Name
+	}
+
+	return nil
+}
+
+func (self *SlackWrapper) combineChannels() error {
 	channels, err := self.api.GetChannels(false)
 	if err != nil {
 		return err
@@ -111,7 +135,12 @@ func (self *SlackWrapper) combineChannel() error {
 	}
 	for i := 0; i < len(ims); i++ {
 		im := ims[i]
-		self.channels[im.ID] = im.User
+		userName, ok := self.users[im.User]
+		if ok {
+			self.channels[im.ID] = userName
+		} else {
+			self.channels[im.ID] = im.User
+		}
 	}
 
 	return nil

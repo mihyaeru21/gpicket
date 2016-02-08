@@ -52,5 +52,5 @@ func parseConfig() Config {
 }
 
 func log(message model.Message) {
-	fmt.Printf("[%s][#%s][%s]%s\n", message.Team, message.Channel, message.UserID, message.Text)
+	fmt.Printf("[%s][#%s][%s]%s\n", message.Team, message.Channel, message.User, message.Text)
 }
