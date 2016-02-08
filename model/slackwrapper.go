@@ -32,13 +32,10 @@ func NewSlack(token string) *SlackWrapper {
 }
 
 func (self *SlackWrapper) Start(messages chan Message) {
-	auth, err := self.api.AuthTest()
-	if err != nil {
+	if err := self.combineTeam(); err != nil {
 		fmt.Printf("Authentication failed. token: %s\n", self.token)
 		os.Exit(1)
 	}
-	self.team = auth.Team
-	self.teamID = auth.TeamID
 
 	rtm := self.api.NewRTM()
 	go rtm.ManageConnection()
@@ -46,7 +43,7 @@ func (self *SlackWrapper) Start(messages chan Message) {
 		msg := <-rtm.IncomingEvents
 		switch event := msg.Data.(type) {
 		case *slack.HelloEvent:
-			fmt.Printf("Logging for %s was started.\n", auth.Team)
+			fmt.Printf("Logging for %s was started.\n", self.team)
 		case *slack.MessageEvent:
 			messages <- self.createMessage(event)
 		case *slack.RTMError:
@@ -65,4 +62,14 @@ func (self *SlackWrapper) createMessage(event *slack.MessageEvent) Message {
 		UserID:    event.User,
 		Text:      event.Text,
 	}
+}
+
+func (self *SlackWrapper) combineTeam() error {
+	auth, err := self.api.AuthTest()
+	if err != nil {
+		return err
+	}
+	self.team = auth.Team
+	self.teamID = auth.TeamID
+	return nil
 }
