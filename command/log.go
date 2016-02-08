@@ -51,7 +51,6 @@ func parseConfig() Config {
 	return config
 }
 
-func log(event model.Message) {
-	message := fmt.Sprintf("[%s][%s][%s]%s", event.TeamID, event.ChannelID, event.UserID, event.Text)
-	fmt.Println(message)
+func log(message model.Message) {
+	fmt.Printf("[%s][%s][%s]%s\n", message.Team, message.ChannelID, message.UserID, message.Text)
 }

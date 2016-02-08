@@ -18,9 +18,10 @@ type Message struct {
 }
 
 type SlackWrapper struct {
-	token string
-	api   *slack.Client
-	team  string
+	token  string
+	api    *slack.Client
+	team   string
+	teamID string
 }
 
 func NewSlack(token string) *SlackWrapper {
@@ -36,7 +37,8 @@ func (self *SlackWrapper) Start(messages chan Message) {
 		fmt.Printf("Authentication failed. token: %s\n", self.token)
 		os.Exit(1)
 	}
-	self.team = auth.TeamID
+	self.team = auth.Team
+	self.teamID = auth.TeamID
 
 	rtm := self.api.NewRTM()
 	go rtm.ManageConnection()
@@ -57,7 +59,8 @@ func (self *SlackWrapper) Start(messages chan Message) {
 func (self *SlackWrapper) createMessage(event *slack.MessageEvent) Message {
 	return Message{
 		Timestamp: event.Timestamp,
-		TeamID:    self.team,
+		Team:      self.team,
+		TeamID:    self.teamID,
 		ChannelID: event.Channel,
 		UserID:    event.User,
 		Text:      event.Text,
