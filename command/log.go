@@ -29,7 +29,8 @@ func CmdLog(c *cli.Context) {
 	}
 
 	for {
-		log(<-messages)
+		message := <-messages
+		fmt.Println(message.MakeStringForLog())
 	}
 }
 
@@ -49,8 +50,4 @@ func parseConfig() Config {
 	}
 
 	return config
-}
-
-func log(message model.Message) {
-	fmt.Printf("[%s][#%s][%s]%s\n", message.Team, message.Channel, message.User, message.Text)
 }

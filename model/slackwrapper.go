@@ -6,17 +6,6 @@ import (
 	"os"
 )
 
-type Message struct {
-	Timestamp string
-	Team      string
-	TeamID    string
-	Channel   string
-	ChannelID string
-	User      string
-	UserID    string
-	Text      string
-}
-
 type SlackWrapper struct {
 	token    string
 	api      *slack.Client
